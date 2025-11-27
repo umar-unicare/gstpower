@@ -1,6 +1,6 @@
 import { Invoice } from '@/types/invoice';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://api.powerfurnitures.com';
 
 export interface DashboardStats {
   totalInvoices: number;

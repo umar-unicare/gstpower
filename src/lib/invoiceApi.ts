@@ -1,6 +1,6 @@
 import { Invoice } from '@/types/invoice';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://api.powerfurnitures.com';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -128,7 +128,11 @@ export const invoiceApi = {
     return response.json();
   },
 
-  getNextInvoiceNumber: async (accessToken: string, shopId?: string): Promise<ApiResponse<{ nextNumber: string }>> => {
+  getNextInvoiceNumber: async (
+  accessToken: string,
+  shopId?: string
+): Promise<{ success: boolean; nextNumber: string }> => {
+
     const queryParams = shopId ? `?shopId=${shopId}` : '';
     const response = await fetch(`${BASE_URL}/api/invoices/next-number${queryParams}`, {
       method: 'GET',
@@ -141,6 +145,24 @@ export const invoiceApi = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to get next invoice number');
+    }
+
+    return response.json();
+  },
+  
+   updateInvoice: async (id: string, invoice: Invoice, accessToken: string): Promise<ApiResponse<{ invoiceId: string }>> => {
+    const response = await fetch(`${BASE_URL}/api/invoices/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(invoice),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update invoice');
     }
 
     return response.json();

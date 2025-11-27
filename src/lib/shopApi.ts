@@ -1,7 +1,8 @@
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://api.powerfurnitures.com';
 
 export interface ShopDetails {
   name: string;
+  tamilName?: string;
   address: string;
   gstin: string;
  phones: string[];

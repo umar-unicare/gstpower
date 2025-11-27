@@ -14,6 +14,11 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
+   // Check if user has no role assigned
+  if (user && !user.role && location.pathname !== '/no-role') {
+    return <Navigate to="/no-role" replace />;
+  }
+
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to="/billing" replace />;
   }

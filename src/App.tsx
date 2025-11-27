@@ -18,6 +18,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import NoRole from "./pages/NoRole";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/auth/signup" element={<Signup />} />
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/no-role" element={<ProtectedRoute><NoRole /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute allowedRoles={['SUPERADMIN']}><Dashboard /></ProtectedRoute>} />
             <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute allowedRoles={['SUPERADMIN']}><InvoiceHistory /></ProtectedRoute>} />

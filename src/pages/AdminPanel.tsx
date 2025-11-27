@@ -83,15 +83,22 @@ export default function AdminPanel() {
     }
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = async (userId: number,mobileNumber: string,) => {
+     const accessToken = getAccessToken();
+    if (!accessToken) return;
     // Can't delete self
     if (userId === user?.id) {
       toast.error("Cannot delete your own account");
       return;
     }
 
-    // Note: No delete API provided yet, keeping functionality disabled
-    toast.error("Delete functionality not yet implemented in backend");
+     try {
+      await authApi.deleteUser(accessToken,userId);
+      await loadUsers();
+      toast.success(`User deleted successfully`);
+    } catch (error) {
+      toast.error("Failed to delete user");
+    }
     setDeleteTarget(null);
   };
 

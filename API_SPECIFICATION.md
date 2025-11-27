@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-http://localhost:5000
+const BASE_URL = 'https://api.powerfurnitures.com';
 ```
 
 ## Authentication Headers
@@ -14,9 +14,266 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-## 1. INVOICE APIs
+## 1. AUTHENTICATION & USER MANAGEMENT APIs
 
-### 1.1 Create Invoice
+### 1.1 Login
+**Endpoint:** `POST /auth/login`
+
+**Request Payload:**
+```json
+{
+  "mobileNumber": "9876543210",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+### 1.2 Signup
+**Endpoint:** `POST /auth/signup`
+
+**Request Payload:**
+```json
+{
+  "name": "John Doe",
+  "mobileNumber": "9876543210",
+  "password": "password123",
+  "email": "john@example.com"
+}
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+---
+
+### 1.3 Request Password Reset
+**Endpoint:** `POST /auth/request-password-reset`
+
+**Request Payload:**
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Response:**
+```
+OTP sent to your email
+```
+
+---
+
+### 1.4 Reset Password
+**Endpoint:** `POST /auth/reset-password`
+
+**Request Payload:**
+```json
+{
+  "email": "john@example.com",
+  "otp": "144180",
+  "newPassword": "NewStrongPassword321"
+}
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+---
+
+### 1.5 Get User Profile
+**Endpoint:** `GET /user/profile`
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "mobileNumber": "9876543210",
+  "roles": "SUPERADMIN",
+  "email": "john@example.com",
+  "profileImg": "https://your-bucket.s3.ap-south-1.amazonaws.com/profile-images/user-123.jpg"
+}
+```
+
+---
+
+### 1.6 Update User Profile
+**Endpoint:** `PUT /user/edit`
+
+**Headers:**
+```
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data
+```
+
+**Request Payload (FormData):**
+```
+mobileNumber: "9876543210"
+name: "John Updated"
+email: "johnupdated@example.com"
+profileImgFile: [File object] (optional)
+removeProfileImg: "false" (optional, "true" to delete profile image)
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+**Notes:**
+- Profile image is uploaded to AWS S3
+- If `removeProfileImg` is "true", profile image is deleted from S3
+- Profile image returned as S3 URL in subsequent profile fetches
+
+---
+
+### 1.7 Delete Profile Image
+**Endpoint:** `PUT /user/edit`
+
+**Headers:**
+```
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data
+```
+
+**Request Payload (FormData):**
+```
+mobileNumber: "9876543210"
+removeProfileImg: "true"
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+---
+
+### 1.8 Get All Users (SUPERADMIN only)
+**Endpoint:** `GET /user/all`
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "mobileNumber": "9876543210",
+    "roles": "SUPERADMIN",
+    "email": "john@example.com"
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "mobileNumber": "9876543211",
+    "roles": "ADMIN",
+    "email": "jane@example.com"
+  }
+]
+```
+
+---
+
+### 1.9 Update User Role (SUPERADMIN only)
+**Endpoint:** `POST /auth/update-role`
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+
+**Request Payload:**
+```json
+{
+  "mobileNumber": "9876543210",
+  "roles": "ADMIN"
+}
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+**Valid Role Values:**
+- `SUPERADMIN`
+- `ADMIN`
+- `USER`
+
+---
+
+### 1.10 Update User (SUPERADMIN/ADMIN only)
+**Endpoint:** `PUT /user/{id}`
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+
+**Request Payload:**
+```json
+{
+  "name": "John Updated",
+  "email": "johnupdated@example.com",
+  "mobileNumber": "9876543210"
+}
+```
+
+**Response:**
+```
+Success (204 No Content or 200 with success message)
+```
+
+---
+
+### 1.9 Delete User (SUPERADMIN only)
+**Endpoint:** `DELETE /user/{id}`
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+
+**Response:**
+```json
+{
+  "message": "User deleted successfully"
+}
+```
+
+---
+
+## 2. INVOICE APIs
+
+### 2.1 Create Invoice
 **Endpoint:** `POST /api/invoices`
 
 **Headers:**
@@ -76,7 +333,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 1.2 Get All Invoices
+### 2.2 Get All Invoices
 **Endpoint:** `GET /api/invoices`
 
 **Headers:**
@@ -134,7 +391,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 1.3 Get Invoice by ID
+### 2.3 Get Invoice by ID
 **Endpoint:** `GET /api/invoices/:id`
 
 **Headers:**
@@ -178,7 +435,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 1.4 Search Invoices
+### 2.4 Search Invoices
 **Endpoint:** `GET /api/invoices/search`
 
 **Headers:**
@@ -214,7 +471,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 1.5 Delete Invoice
+### 2.5 Delete Invoice
 **Endpoint:** `DELETE /api/invoices/:id`
 
 **Headers:**
@@ -233,7 +490,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 1.6 Get Next Invoice Number
+### 2.6 Get Next Invoice Number
 **Endpoint:** `GET /api/invoices/next-number`
 
 **Headers:**
@@ -255,9 +512,9 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-## 2. SUPPLIER BILL APIs
+## 3. SUPPLIER BILL APIs
 
-### 2.1 Create Supplier Bill
+### 3.1 Create Supplier Bill
 **Endpoint:** `POST /api/supplier-bills`
 
 **Headers:**
@@ -269,32 +526,23 @@ Authorization: Bearer {{accessToken}}
 **Request Payload:**
 ```json
 {
-  "id": "SUPP-001-2024",
-  "date": "2024-01-15",
-  "supplierName": "ABC Furniture Supplies",
-  "supplierGSTIN": "29ABCDE1234F1Z5",
-  "billNumber": "BILL-001",
-  "items": [
+  "id": "95f342f6-4ce8-404d-b6e6-6d36c1453944",
+  "supplierName": "Test supplier",
+  "description": "Test description",
+  "purchaseDate": "2025-11-04",
+  "files": [
     {
-      "id": "item-1",
-      "description": "Wooden Planks",
-      "hsnCode": "4407",
-      "quantity": 100,
-      "rate": 500,
-      "unit": "PCS",
-      "taxRate": 18,
-      "amount": 50000
+      "name": "Print Invoice.pdf",
+      "type": "application/pdf",
+      "dataUrl": "data:application/pdf;base64,JVBERi0xLjQKJdPr6eE..."
+    },
+    {
+      "name": "invoice-image.jpg",
+      "type": "image/jpeg",
+      "dataUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD..."
     }
   ],
-  "subtotal": 50000,
-  "cgst": 4500,
-  "sgst": 4500,
-  "igst": 0,
-  "totalTax": 9000,
-  "total": 59000,
-  "roundOff": 0,
-  "finalAmount": 59000,
-  "notes": "Raw materials for production"
+  "createdAt": "2025-11-11T06:21:52.048Z"
 }
 ```
 
@@ -303,13 +551,13 @@ Authorization: Bearer {{accessToken}}
 {
   "success": true,
   "message": "Supplier bill created successfully",
-  "billId": "SUPP-001-2024"
+  "billId": "95f342f6-4ce8-404d-b6e6-6d36c1453944"
 }
 ```
 
 ---
 
-### 2.2 Get All Supplier Bills
+### 3.2 Get All Supplier Bills
 **Endpoint:** `GET /api/supplier-bills`
 
 **Headers:**
@@ -330,27 +578,31 @@ Authorization: Bearer {{accessToken}}
   "success": true,
   "data": [
     {
-      "id": "SUPP-001-2024",
-      "date": "2024-01-15",
-      "supplierName": "ABC Furniture Supplies",
-      "supplierGSTIN": "29ABCDE1234F1Z5",
-      "billNumber": "BILL-001",
-      "items": [...],
-      "subtotal": 50000,
-      "cgst": 4500,
-      "sgst": 4500,
-      "igst": 0,
-      "totalTax": 9000,
-      "total": 59000,
-      "roundOff": 0,
-      "finalAmount": 59000,
-      "notes": "Raw materials for production"
+      "id": "95f342f6-4ce8-404d-b6e6-6d36c1453944",
+      "supplierName": "Test supplier",
+      "description": "Test description",
+      "purchaseDate": "2025-11-04",
+      "createdAt": "2025-11-11T06:21:52.048Z",
+      "files": [
+        {
+          "id": 1,
+          "name": "Print Invoice.pdf",
+          "type": "application/pdf",
+          "url": "https://your-bucket.s3.ap-south-1.amazonaws.com/supplier-bills/95f342f6-4ce8-404d-b6e6-6d36c1453944/Print%20Invoice.pdf"
+        },
+        {
+          "id": 2,
+          "name": "invoice-image.jpg",
+          "type": "image/jpeg",
+          "url": "https://your-bucket.s3.ap-south-1.amazonaws.com/supplier-bills/95f342f6-4ce8-404d-b6e6-6d36c1453944/invoice-image.jpg"
+        }
+      ]
     }
   ],
   "pagination": {
     "currentPage": 1,
-    "totalPages": 3,
-    "totalItems": 150,
+    "totalPages": 1,
+    "totalItems": 1,
     "itemsPerPage": 50
   }
 }
@@ -358,7 +610,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 2.3 Delete Supplier Bill
+### 3.3 Delete Supplier Bill
 **Endpoint:** `DELETE /api/supplier-bills/:id`
 
 **Headers:**
@@ -377,9 +629,9 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-## 3. SHOP SETTINGS APIs
+## 4. SHOP SETTINGS APIs
 
-### 3.1 Get Shop Settings
+### 4.1 Get Shop Settings
 **Endpoint:** `GET /api/shop-settings`
 
 **Headers:**
@@ -395,17 +647,23 @@ Authorization: Bearer {{accessToken}}
   "data": {
     "shop1": {
       "name": "Furniture Palace - Branch 1",
-      "address": "123 Main Street, City, State - 560001",
+      "address": "123 Main Street",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560001",
       "gstin": "29ABCDE1234F1Z5",
-      "phone": "080-12345678",
-      "email": "branch1@furniturepalace.com"
+      "email": "branch1@furniturepalace.com",
+      "phones": ["080-12345678", "080-12345679", "9876543210", "9876543211"]
     },
     "shop2": {
       "name": "Furniture Palace - Branch 2",
-      "address": "456 Market Road, City, State - 560002",
+      "address": "456 Market Road",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560002",
       "gstin": "29FGHIJ5678K1L9",
-      "phone": "080-87654321",
-      "email": "branch2@furniturepalace.com"
+      "email": "branch2@furniturepalace.com",
+      "phones": ["080-87654321", "080-87654322", "9876543212", "9876543213"]
     },
     "bankDetails": {
       "accountName": "Furniture Palace Pvt Ltd",
@@ -420,7 +678,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 3.2 Update Shop Settings
+### 4.2 Update Shop Settings
 **Endpoint:** `PUT /api/shop-settings`
 
 **Headers:**
@@ -434,17 +692,23 @@ Authorization: Bearer {{accessToken}}
 {
   "shop1": {
     "name": "Furniture Palace - Branch 1",
-    "address": "123 Main Street, City, State - 560001",
+    "address": "123 Main Street",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "pincode": "560001",
     "gstin": "29ABCDE1234F1Z5",
-    "phone": "080-12345678",
-    "email": "branch1@furniturepalace.com"
+    "email": "branch1@furniturepalace.com",
+    "phones": ["080-12345678", "080-12345679", "9876543210", "9876543211"]
   },
   "shop2": {
     "name": "Furniture Palace - Branch 2",
-    "address": "456 Market Road, City, State - 560002",
+    "address": "456 Market Road",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "pincode": "560002",
     "gstin": "29FGHIJ5678K1L9",
-    "phone": "080-87654321",
-    "email": "branch2@furniturepalace.com"
+    "email": "branch2@furniturepalace.com",
+    "phones": ["080-87654321", "080-87654322", "9876543212", "9876543213"]
   },
   "bankDetails": {
     "accountName": "Furniture Palace Pvt Ltd",
@@ -466,7 +730,7 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-### 3.3 Get Shop Details by ID
+### 4.3 Get Shop Details by ID
 **Endpoint:** `GET /api/shop-settings/:shopId`
 
 **Headers:**
@@ -483,10 +747,13 @@ Authorization: Bearer {{accessToken}}
   "success": true,
   "data": {
     "name": "Furniture Palace - Branch 1",
-    "address": "123 Main Street, City, State - 560001",
+    "address": "123 Main Street",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "pincode": "560001",
     "gstin": "29ABCDE1234F1Z5",
-    "phone": "080-12345678",
     "email": "branch1@furniturepalace.com",
+    "phones": ["080-12345678", "080-12345679", "9876543210", "9876543211"],
     "bankDetails": {
       "accountName": "Furniture Palace Pvt Ltd",
       "accountNumber": "1234567890",
@@ -500,9 +767,9 @@ Authorization: Bearer {{accessToken}}
 
 ---
 
-## 4. DASHBOARD APIs
+## 5. DASHBOARD APIs
 
-### 4.1 Get Dashboard Statistics
+### 5.1 Get Dashboard Statistics
 **Endpoint:** `GET /api/dashboard/stats`
 
 **Headers:**

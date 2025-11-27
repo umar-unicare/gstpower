@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Invoice, EWayDetails } from '@/types/invoice';
 import { GSTInvoiceTemplate } from './templates/GSTInvoiceTemplate';
 import { EWayBillTemplate } from './templates/EWayBillTemplate';
+import { useAuth } from '@/hooks/useAuth';
+import { invoiceApi } from '@/lib/invoiceApi';  
+import { toast } from 'sonner';
 
 interface PrintModalProps {
   invoice: Invoice;
@@ -18,6 +21,7 @@ interface PrintModalProps {
 
 export function PrintModal({ invoice, onClose, onPrintComplete, onInvoiceUpdate }: PrintModalProps) {
   const [printGST, setPrintGST] = useState(true);
+  
   const [printEWay, setPrintEWay] = useState(invoice.ewayGenerated);
   const [ewayDetails, setEwayDetails] = useState<EWayDetails>(
     invoice.ewayDetails || {
@@ -28,16 +32,51 @@ export function PrintModal({ invoice, onClose, onPrintComplete, onInvoiceUpdate 
       distance: '',
     }
   );
+  const { getAccessToken } = useAuth();
 
-  const handlePrint = () => {
-    // If E-Way bill is being printed for the first time, update the invoice
-    if (printEWay && !invoice.ewayGenerated && onInvoiceUpdate) {
-      const updatedInvoice = {
-        ...invoice,
-        ewayGenerated: true,
-        ewayDetails: ewayDetails,
-      };
-      onInvoiceUpdate(updatedInvoice);
+  const token = getAccessToken();
+  const [updating, setUpdating] = useState(false);
+
+  // const handlePrint = () => {
+  //   // If E-Way bill is being printed for the first time, update the invoice
+  //   if (printEWay && !invoice.ewayGenerated && onInvoiceUpdate) {
+  //     const updatedInvoice = {
+  //       ...invoice,
+  //       ewayGenerated: true,
+  //       ewayDetails: ewayDetails,
+  //     };
+  //     onInvoiceUpdate(updatedInvoice);
+  //   }
+
+  const handlePrint = async () => {
+    // If E-Way bill is being printed for the first time, update the invoice via PUT API
+    if (printEWay && !invoice.ewayGenerated) {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Please login to update invoice');
+        return;
+      }
+
+      setUpdating(true);
+      try {
+        const updatedInvoice = {
+          ...invoice,
+          ewayGenerated: true,
+          ewayDetails: ewayDetails,
+        };
+        
+        await invoiceApi.updateInvoice(invoice.id, updatedInvoice, token);
+        if (onInvoiceUpdate) {
+          onInvoiceUpdate(updatedInvoice);
+        }
+        toast.success('E-Way bill details saved');
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to update invoice');
+        setUpdating(false);
+        return;
+      } finally {
+        setUpdating(false);
+      }
     }
 
     const printWindow = window.open('', '_blank');
@@ -232,10 +271,10 @@ export function PrintModal({ invoice, onClose, onPrintComplete, onInvoiceUpdate 
           {/* Hidden templates for printing */}
           <div className="hidden">
             <div id="gst-invoice-template">
-              <GSTInvoiceTemplate invoice={invoice} />
+              <GSTInvoiceTemplate invoice={invoice} accessToken={token}/>
             </div>
             <div id="eway-bill-template">
-              <EWayBillTemplate invoice={invoice} ewayDetails={ewayDetails} />
+              <EWayBillTemplate invoice={invoice} ewayDetails={ewayDetails} accessToken={token} />
             </div>
           </div>
 
@@ -244,23 +283,23 @@ export function PrintModal({ invoice, onClose, onPrintComplete, onInvoiceUpdate 
             <p className="text-sm font-medium mb-3">Preview:</p>
             {printGST && (
               <div className="bg-white p-2 sm:p-4 rounded shadow-sm mb-4 text-xs sm:text-sm">
-                <GSTInvoiceTemplate invoice={invoice} />
+                <GSTInvoiceTemplate invoice={invoice} accessToken={token}/>
               </div>
             )}
             {printEWay && (
               <div className="bg-white p-2 sm:p-4 rounded shadow-sm text-xs sm:text-sm">
-                <EWayBillTemplate invoice={invoice} ewayDetails={ewayDetails} />
+                <EWayBillTemplate invoice={invoice} ewayDetails={ewayDetails} accessToken={token} />
               </div>
             )}
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto" disabled={updating}>
               Cancel
             </Button>
-            <Button onClick={handlePrint} disabled={!printGST && !printEWay} className="w-full sm:w-auto">
+            <Button onClick={handlePrint} disabled={!printGST && !printEWay || updating} className="w-full sm:w-auto">
               <Printer className="mr-2 h-4 w-4" />
-              Print
+             {updating ? 'Updating...' : 'Print'}
             </Button>
           </div>
         </div>

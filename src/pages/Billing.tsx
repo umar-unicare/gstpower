@@ -28,31 +28,59 @@ export default function Billing() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(false);
+  const token = getAccessToken();
 
-  useEffect(() => {
-    const loadData = async () => {
-      const token = getAccessToken();
-      if (!token) return;
+  // useEffect(() => {
+  //   const loadData = async () => {
+      
+  //     if (!token) return;
 
-      try {
-        const [shopResponse, invoiceResponse] = await Promise.all([
-          shopApi.getShopSettings(token),
-          invoiceApi.getNextInvoiceNumber(token)
-        ]);
+  //     try {
+  //       const [shopResponse, invoiceResponse] = await Promise.all([
+  //         shopApi.getShopSettings(token),
+  //         invoiceApi.getNextInvoiceNumber(token)
+  //       ]);
 
-        if (shopResponse.success && shopResponse.data) {
-          setShopsData(shopResponse.data);
-        }
-        if (invoiceResponse.success && invoiceResponse.data) {
-          setInvoiceNumber(invoiceResponse.data.nextNumber);
-        }
-      } catch (error) {
-        toast.error('Failed to load data');
+  //       if (shopResponse.success && shopResponse.data) {
+  //         setShopsData(shopResponse.data);
+  //       }
+  //       if (invoiceResponse.success && invoiceResponse.data) {
+  //         setInvoiceNumber(invoiceResponse.data.nextNumber);
+  //       }
+  //     } catch (error) {
+  //       toast.error('Failed to load data');
+  //     }
+  //   };
+
+  //   loadData();
+  // }, [getAccessToken]);
+
+useEffect(() => {
+  const loadData = async () => {
+    if (!token) return;
+
+    try {
+      const [shopResponse, invoiceResponse] = await Promise.all([
+        shopApi.getShopSettings(token),
+        invoiceApi.getNextInvoiceNumber(token, selectedShop),
+      ]);
+
+      if (shopResponse.success && shopResponse.data) {
+        setShopsData(shopResponse.data);
       }
-    };
 
-    loadData();
-  }, [getAccessToken]);
+     if (invoiceResponse.success) {
+  setInvoiceNumber(invoiceResponse.nextNumber);
+    }
+
+    } catch (error) {
+      toast.error('Failed to load data');
+    }
+  };
+
+  loadData();
+}, [selectedShop, token]);   // ← FIXED
+
 
   const [customer, setCustomer] = useState<Customer>({
     name: '',
@@ -164,9 +192,13 @@ export default function Billing() {
         };
       });
 
-      const invoice: Invoice = {
-        id: Date.now().toString(),
-        invoiceNumber,
+    const latest = await invoiceApi.getNextInvoiceNumber(token, selectedShop);
+    console.log('Latest invoice number response:', latest.nextNumber);
+const finalInvoiceNumber = `INV-${latest?.nextNumber}`;
+
+const invoice: Invoice = {
+  id: Date.now().toString(),
+  invoiceNumber: finalInvoiceNumber,
         date,
         shopId: selectedShop,
         customer,
@@ -539,16 +571,19 @@ export default function Billing() {
               toast.success('Invoice printed successfully!');
               navigate('/history');
             }}
-            onInvoiceUpdate={async (updatedInvoice) => {
-              const token = getAccessToken();
-              if (!token) return;
+            // onInvoiceUpdate={async (updatedInvoice) => {
+            //   const token = getAccessToken();
+            //   if (!token) return;
               
-              try {
-                await invoiceApi.createInvoice(updatedInvoice, token);
-                setCurrentInvoice(updatedInvoice);
-              } catch (error) {
-                toast.error('Failed to update invoice');
-              }
+            //   try {
+            //     await invoiceApi.createInvoice(updatedInvoice, token);
+            //     setCurrentInvoice(updatedInvoice);
+            //   } catch (error) {
+            //     toast.error('Failed to update invoice');
+            //   }
+            // }}
+             onInvoiceUpdate={(updatedInvoice) => {
+              setCurrentInvoice(updatedInvoice);
             }}
           />
         )}

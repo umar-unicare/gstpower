@@ -1,6 +1,6 @@
 import { SupplierBill } from '@/types/supplierBill';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://api.powerfurnitures.com';
 
 interface ApiResponse<T> {
   success: boolean;

@@ -1,8 +1,10 @@
 export interface SupplierBillFile {
+  id?: number;
   name: string;
   type: string;
-  dataUrl: string;
-  size: number;
+  dataUrl?: string; // Used for upload
+  url?: string; // Used for display from backend (S3/local URL)
+  size?: number;
 }
 
 export interface SupplierBill {

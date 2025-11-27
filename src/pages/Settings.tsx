@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Save, Building, Store } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -145,6 +146,13 @@ export default function Settings() {
             <Input
               value={shop.name}
               onChange={(e) => updateShop(shopId, 'name', e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Shop Name (Tamil)</Label>
+            <Input
+              value={shop.tamilName || 'நியூ பவர் ஹோம் அப்ளையன்ஸ் & ஃபர்னிச்சர்'}
+              onChange={(e) => updateShop(shopId, 'tamilName', e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
